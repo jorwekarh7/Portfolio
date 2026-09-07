@@ -1,6 +1,6 @@
-import { shaderMaterial } from '@react-three/drei'
-import * as THREE from 'three'
-import { extend } from '@react-three/fiber'
+import { shaderMaterial } from "@react-three/drei";
+import * as THREE from "three";
+import { extend } from "@react-three/fiber";
 
 // GLSL noise function (you can paste a full simplex or Perlin noise function here)
 const snoise3 = `
@@ -88,7 +88,7 @@ float snoise3(vec3 v) {
 const SunMaterial = shaderMaterial(
   {
     uTime: 0,
-    uColor: new THREE.Color('orange'),
+    uColor: new THREE.Color("orange"),
   },
   // Vertex Shader
   `
@@ -110,8 +110,12 @@ const SunMaterial = shaderMaterial(
     ${snoise3}
 
     void main() {
-      float noise = snoise3(vec3(normalize(vNormal) * 2.0 + uTime * 0.2));
-      float intensity = 0.7 + 0.3 * noise; // previously 0.5 + 0.5 * noise
+      // Keep the original simplex surface, adding finer turbulent granulation.
+      vec3 surface = normalize(vNormal);
+      float noise = snoise3(surface * 2.0 + uTime * 0.08);
+      noise += .35 * snoise3(surface * 15.0 + uTime * 0.12);
+      noise += .18 * snoise3(surface * 48.0 - uTime * 0.10);
+      float intensity = 0.68 + 0.3 * noise;
 
       vec3 lightDir = normalize(vec3(0.5, 0.5, 1.0));
       float light = dot(normalize(vNormal), lightDir);
@@ -122,12 +126,16 @@ const SunMaterial = shaderMaterial(
       float totalLight = mix(ambient, 1.0, light);
 
 
-      vec3 color = uColor * 1.9 * intensity * totalLight;
+      float cells = snoise3(surface * 85.0 + noise * 2.0 + uTime * .14);
+      float filaments = pow(1.0-abs(cells), 7.0);
+      vec3 color = mix(vec3(.25,.018,.001), uColor * vec3(1.5,1.5,1.) + vec3(0.,.14,.035), smoothstep(-.6,.75,noise));
+      color += vec3(.36,.18,.015) * filaments;
+      color *= totalLight * (.8 + intensity*.35);
       gl_FragColor = vec4(color, 1.0);
     }
-  `
-)
+  `,
+);
 
-extend({ SunShaderMaterial: SunMaterial })
+extend({ SunShaderMaterial: SunMaterial });
 
-export default SunMaterial
+export default SunMaterial;

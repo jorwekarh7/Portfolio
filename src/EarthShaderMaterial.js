@@ -1,7 +1,7 @@
 // EarthShaderMaterial.js
-import { shaderMaterial } from '@react-three/drei'
-import * as THREE from 'three'
-import { extend } from '@react-three/fiber'
+import { shaderMaterial } from "@react-three/drei";
+import * as THREE from "three";
+import { extend } from "@react-three/fiber";
 
 const EarthShaderMaterial = shaderMaterial(
   {
@@ -38,7 +38,11 @@ const EarthShaderMaterial = shaderMaterial(
       vec3 nightColor = texture2D(uNightTexture, vUv).rgb;
 
       float lightFactor = dot(normalize(vWorldNormal), normalize(uLightDirection));
-      lightFactor = clamp(lightFactor, 0.0, 1.0);
+      float dayMix = smoothstep(-0.12, 0.25, lightFactor);
+      float sunlight = 0.13 + 0.87 * max(0.0,lightFactor);
+      dayColor *= vec3(.93,1.04,1.14) * sunlight;
+      nightColor = nightColor * 1.1 + texture2D(uDayTexture, vUv).rgb * vec3(.30,.38,.48);
+      lightFactor = dayMix;
 
       vec3 baseColor = mix(nightColor, dayColor, lightFactor);
 
@@ -49,9 +53,9 @@ const EarthShaderMaterial = shaderMaterial(
 
       gl_FragColor = vec4(finalColor, 1.0);
     }
-  `
-)
+  `,
+);
 
-extend({ EarthShaderMaterial })
+extend({ EarthShaderMaterial });
 
-export default EarthShaderMaterial
+export default EarthShaderMaterial;

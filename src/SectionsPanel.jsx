@@ -69,7 +69,7 @@
     );
     }
 
-    export default function SectionsPanel({ panel, onClose, onOpenProject }) {
+    export default function SectionsPanel({ panel, onClose }) {
     if (!panel) return null;
 
     if (panel === "about") {
